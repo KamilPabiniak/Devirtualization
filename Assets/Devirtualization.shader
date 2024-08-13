@@ -82,17 +82,18 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Określanie momentu, gdy tekstura znika i pojawia się siatka
-                float wireTransition = saturate((_Transition) / _Feather);
+                float wireTransition = saturate(_Transition / _Feather);
 
-                // Mieszanie koloru siatki z teksturą, gdy tekstura zanika
-                float3 finalColor = lerp(texColor.rgb, _DissolveColor, revealDifference);
-                finalColor = lerp(finalColor.rgb, _WireColor.rgb, wireTransition * wireMask);
+                // Mieszanie koloru tekstury z kolorem rozpuszczania
+                float3 dissolveColor = lerp(texColor.rgb, _DissolveColor.rgb, revealDifference);
+
+                // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura znika)
+                float3 wireframeColor = lerp(dissolveColor, _WireColor.rgb, wireTransition * wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
                 float alpha = texColor.a * (1.0 - wireTransition) + wireTransition * wireMask;
-                fixed4 fin = fixed4(finalColor.rgb, alpha);
 
-                return fin;
+                return fixed4(wireframeColor.rgb, alpha);
             }
             ENDCG
         }
