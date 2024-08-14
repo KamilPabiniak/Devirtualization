@@ -8,7 +8,7 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
         _WireThickness ("Wireframe Thickness", Range(0.01, 0.06)) = 0.02  // Grubość linii siatki
         _WireScale ("Wireframe Scale", Float) = 6.0        // Skalowanie siatki (rozmiar kwadratów)
         _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
-        _Feather ("Feather", Float) = 0
+        _Feather ("Feather", Float) = 0.1
         _DissolveColor ("Dissolve Color", Color) = (1.0, 0.5, 0.0, 1.0) // Kolor rozpuszczania (pomarańczowy)
     }
 
@@ -17,12 +17,12 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
         Tags { "RenderType"="Transparent" "Queue"="Overlay" }
         LOD 200
 
-        // Rysowanie zarówno z przodu jak i z tyłu obiektu
         Pass
         {
             Cull Off
-            ZWrite On
-            Blend SrcAlpha OneMinusSrcAlpha
+            ZWrite Off
+            Blend One OneMinusSrcAlpha // Zastosowanie blendowania przedmnożonego
+            Offset -1, -1
 
             CGPROGRAM
             #pragma vertex vert
@@ -77,23 +77,20 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
                 float wireMask = 1.0 - gridLine.x * gridLine.y;
 
                 // Obliczanie wartości revealAmount
-                float revealAmountTop = step(mask.r, _Transition - _Feather);
-                float revealAmountBottom = step(mask.r, _Transition + _Feather);
+                float revealAmountTop = step(mask.r, _Transition + _Feather);
+                float revealAmountBottom = step(mask.r, _Transition - _Feather);
                 float revealDifference = revealAmountTop - revealAmountBottom;
-
-                // Określanie momentu, gdy tekstura znika i pojawia się siatka
-                float wireTransition = saturate(_Transition / _Feather);
 
                 // Mieszanie koloru tekstury z kolorem rozpuszczania
                 float3 dissolveColor = lerp(texColor.rgb, _DissolveColor.rgb, revealDifference);
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura znika)
-                float3 wireframeColor = lerp(dissolveColor, _WireColor.rgb, wireTransition * wireMask);
+                float3 wireframeColor = lerp(dissolveColor, _WireColor.rgb, revealDifference * wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
-                float alpha = texColor.a * (1.0 - wireTransition) + wireTransition * wireMask;
+                float alpha = texColor.a * (1.0 - revealDifference) + revealDifference * wireMask;
 
-                return fixed4(wireframeColor.rgb, alpha);
+                return float4(wireframeColor.rgb , alpha); //wireframeColor.rgb * alpha
             }
             ENDCG
         }
