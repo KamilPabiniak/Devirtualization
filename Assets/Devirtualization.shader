@@ -78,19 +78,29 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
                 float2 gridLine = smoothstep(0.0, _WireThickness, gridUV) * smoothstep(0.0, _WireThickness, 1.0 - gridUV);
                 float wireMask = 1.0 - gridLine.x * gridLine.y;
 
+           
+                float divider;
+                if (_Transition == 1)
+                {
+                    divider = 0; 
+                }
+                else
+                {
+                    divider = (1.0 * _Feather);
+                }
                 // Obliczanie ukrywania tekstury 
-                float revealAmountTop = step(mask.r, _Transition + _Feather);
-                float revealAmountBottom = step(mask.r, _Transition - _Feather);
+                float revealAmountTop = step(mask.r, _Transition + (1.0 / _Feather));
+                float revealAmountBottom = step(mask.r, _Transition - divider);
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura znika)
-                float3 wireframeColor = lerp(_WireTint.rgb , _WireColor.rgb, revealDifference * wireMask);
+                float3 wireframeColor = lerp(_WireTint.rgb , _WireColor.rgb, wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
-                float alpha = (1.0 - revealDifference) + revealDifference * wireMask;
+                float alpha = 1.0 - revealDifference * revealAmountTop;
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
 
-                return float4(finalColor.rgb, alpha); //wireframeColor.rgb * alpha
+                return fixed4(finalColor.rgb, alpha); //wireframeColor.rgb * alpha
             }
             ENDCG
         }
