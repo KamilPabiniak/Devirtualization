@@ -1,4 +1,4 @@
-Shader "Custom/ColoredWireframeOnTransparent3D"
+Shader "Custom/ColoredWireframeOnOpaque3D"
 {
     Properties
     {
@@ -11,18 +11,19 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
         _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
         _Feather ("Feather", Float) = 0.1
         _DissolveColor ("Dissolve Color", Color) = (1.0, 0.5, 0.0, 1.0) // Kolor rozpuszczania (pomarańczowy)
+        _DissolveEmission ("Dissolve Emission", Float) = 20
     }
 
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Overlay" }
+        Tags { "RenderType"="Opaque" "Queue"="Geometry" }
         LOD 200
 
         Pass
         {
             Cull Off
-            ZWrite Off
-            Blend One OneMinusSrcAlpha // Zastosowanie blendowania przedmnożonego
+            ZWrite On
+            Blend SrcAlpha OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
             Offset -1, -1
 
             CGPROGRAM
@@ -53,6 +54,7 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
             float _WireThickness;
             float _WireScale;
             float _Transition, _Feather;
+            float _DissolveEmission;
 
             v2f vert(appdata v)
             {
@@ -70,7 +72,7 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
                 float4 texColor = tex2D(_MainTex, i.uv.xy);
                 float4 mask = tex2D(_MaskTex, i.uv.zw);
 
-                // Skalowanie siatki
+                // Scale Wireframe
                 float2 scaledUV = i.uv * _WireScale;
 
                 // Tworzenie siatki kwadratowej na bazie współrzędnych UV
@@ -78,29 +80,23 @@ Shader "Custom/ColoredWireframeOnTransparent3D"
                 float2 gridLine = smoothstep(0.0, _WireThickness, gridUV) * smoothstep(0.0, _WireThickness, 1.0 - gridUV);
                 float wireMask = 1.0 - gridLine.x * gridLine.y;
 
-           
-                float divider;
-                if (_Transition == 1)
-                {
-                    divider = 0; 
-                }
-                else
-                {
-                    divider = (1.0 * _Feather);
-                }
                 // Obliczanie ukrywania tekstury 
-                float revealAmountTop = step(mask.r, _Transition + (1.0 / _Feather));
-                float revealAmountBottom = step(mask.r, _Transition - divider);
+                float featerMod = _Transition == 1 ? 0 : 1.0 * _Feather;
+                float revealAmountTop = step(mask.r, _Transition + (1 / _Feather));
+                float revealAmountTopTex = step(mask.r, _Transition + _Feather);
+                float revealAmountBottom = step(mask.r, _Transition - featerMod);
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura znika)
                 float3 wireframeColor = lerp(_WireTint.rgb , _WireColor.rgb, wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
-                float alpha = 1.0 - revealDifference * revealAmountTop;
-                float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
-
-                return fixed4(finalColor.rgb, alpha); //wireframeColor.rgb * alpha
+                float3 finalColor = lerp(texColor.rgb, wireframeColor , revealDifference);
+                float3 dissolveCol = lerp(texColor.rgb / 2, _DissolveColor * _DissolveEmission, revealDifference);
+                // Alpha set
+                float alpha = texColor.a * revealAmountTop;
+                
+                return fixed4(finalColor.rgb + dissolveCol.rgb * revealAmountTopTex, alpha);
             }
             ENDCG
         }
