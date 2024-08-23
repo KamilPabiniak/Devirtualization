@@ -81,21 +81,22 @@ Shader "Custom/Devirtualization"
                 float wireMask = 1.0 - gridLine.x * gridLine.y;
 
                 // Obliczanie ukrywania tekstury 
-                float featerMod = _Transition == 1 ? 0 : 1.0 * _Feather;
-                float revealAmountTop = step(mask.r, _Transition + (1 / _Feather));
+                float featerMod = _Transition == 1 ? 0 : _Feather; //1.0 *
+                float revealAmountTop = step(mask.r, _Transition + (1.0 / _Feather));
                 float revealAmountTopTex = step(mask.r, _Transition + _Feather);
                 float revealAmountBottom = step(mask.r, _Transition - featerMod);
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura znika)
-                float3 wireframeColor = lerp(_WireTint.rgb , _WireColor.rgb, wireMask);
+                float3 wireframeColor = lerp(_WireTint.rgb * _WireTint.a, _WireColor.rgb, wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
                 float3 dissolveCol = lerp(texColor.rgb / 2, _DissolveColor * _DissolveEmission, revealDifference);
+                
                 // Alpha set
-                float gridTransparency = 1.0 - (revealAmountTop) * ( wireMask); // Transparent between lines
-                float alpha = lerp(texColor.a, gridTransparency * revealDifference, revealDifference);
+                float gridTransparency = 1.0 + _WireTint.a; // Transparent between lines
+                float alpha = lerp(texColor.a, gridTransparency, revealDifference);
                 
                 return fixed4(finalColor.rgb + dissolveCol.rgb * revealAmountTopTex, alpha);
             }
