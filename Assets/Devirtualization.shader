@@ -1,4 +1,4 @@
-Shader "Custom/ColoredWireframeOnOpaque3D"
+Shader "Custom/Devirtualization"
 {
     Properties
     {
@@ -6,7 +6,7 @@ Shader "Custom/ColoredWireframeOnOpaque3D"
         _MaskTex ("Mask for Dissolve", 2D) = "white" {}                // Maska obiektu
         _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) // Kolor siatki (domyślnie biały)
         _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Kolor rozpuszczania (pomarańczowy)
-        _WireThickness ("Wireframe Thickness", Range(0.01, 0.06)) = 0.02  // Grubość linii siatki
+        _WireThickness ("Wireframe Thickness", Range(0, 0.06)) = 0.02  // Grubość linii siatki
         _WireScale ("Wireframe Scale", Float) = 6.0        // Skalowanie siatki (rozmiar kwadratów)
         _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
         _Feather ("Feather", Float) = 0.1
@@ -91,10 +91,11 @@ Shader "Custom/ColoredWireframeOnOpaque3D"
                 float3 wireframeColor = lerp(_WireTint.rgb , _WireColor.rgb, wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
-                float3 finalColor = lerp(texColor.rgb, wireframeColor , revealDifference);
+                float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
                 float3 dissolveCol = lerp(texColor.rgb / 2, _DissolveColor * _DissolveEmission, revealDifference);
                 // Alpha set
-                float alpha = texColor.a * revealAmountTop;
+                float gridTransparency = 1.0 - (revealAmountTop) * ( wireMask); // Transparent between lines
+                float alpha = lerp(texColor.a, gridTransparency * revealDifference, revealDifference);
                 
                 return fixed4(finalColor.rgb + dissolveCol.rgb * revealAmountTopTex, alpha);
             }
