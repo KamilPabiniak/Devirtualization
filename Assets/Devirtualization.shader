@@ -6,7 +6,7 @@ Shader "Devirtualization"
         _MaskTex ("Mask for Dissolve", 2D) = "white" {}      // Maska obiektu
         _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) // Kolor siatki (domyślnie biały)
         _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Kolor rozpuszczania
-        _WireThickness ("Wireframe Thickness", Range(0.01, 0.3)) = 0.02  // Grubość linii siatki
+        _WireThickness ("Wireframe Thickness", Range(0, 0.3)) = 0.02  // Grubość linii siatki
         _WireScale ("Wireframe Scale", Float) = 6.0          // Skalowanie siatki (rozmiar kwadratów)
         _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
         _Feather ("Feather", Float) = 0.1                    // Rozmycie przejścia
@@ -17,13 +17,15 @@ Shader "Devirtualization"
     SubShader
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent"  "IgnoreProjector"="True"}
-        Cull Off
-        ZWrite On
-        Blend SrcAlpha OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
         LOD 100
 
         Pass
         {
+            //Cull Off
+            ZWrite On
+            ZTest On
+            Blend One OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
+            
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -68,7 +70,6 @@ Shader "Devirtualization"
 
             float4 frag(v2f i) : SV_Target
             {
-                // Próbkowanie tekstury i maski
                 float4 texColor = tex2D(_MainTex, i.uv);
                 float4 mask = tex2D(_MaskTex, i.uv);
 
@@ -97,7 +98,7 @@ Shader "Devirtualization"
                 float3 dissolveColor = lerp(texColor.rgb / 2, _DissolveColor * _DissolveEmission, revealDifference);
                 
                 // Alpha set
-                float gridTransparency = _WireTint + wireMask;
+                float gridTransparency = _WireTint * wireMask;
                 //wireMask ma wade. Nie możesz ustawić go by był transparent. Oszukaj to
                 float alpha = lerp(texColor.a, gridTransparency, revealDifference);
                 
