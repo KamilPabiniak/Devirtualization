@@ -1,4 +1,4 @@
-Shader "Custom/Devirtualization"
+Shader "Devirtualization"
 {
     Properties
     {
@@ -6,7 +6,7 @@ Shader "Custom/Devirtualization"
         _MaskTex ("Mask for Dissolve", 2D) = "white" {}      // Maska obiektu
         _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) // Kolor siatki (domyślnie biały)
         _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Kolor rozpuszczania
-        _WireThickness ("Wireframe Thickness", Range(0.01, 0.2)) = 0.02  // Grubość linii siatki
+        _WireThickness ("Wireframe Thickness", Range(0.01, 0.3)) = 0.02  // Grubość linii siatki
         _WireScale ("Wireframe Scale", Float) = 6.0          // Skalowanie siatki (rozmiar kwadratów)
         _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
         _Feather ("Feather", Float) = 0.1                    // Rozmycie przejścia
@@ -16,15 +16,14 @@ Shader "Custom/Devirtualization"
 
     SubShader
     {
-        Tags { "RenderType"="Transparent" "Queue"="Transparent" }
-        LOD 200
+        Tags { "RenderType"="Transparent" "Queue"="Transparent"  "IgnoreProjector"="True"}
+        Cull Off
+        ZWrite On
+        Blend SrcAlpha OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
+        LOD 100
 
         Pass
         {
-            Cull Off
-            ZWrite On
-            Blend SrcAlpha OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
-
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -90,8 +89,8 @@ Shader "Custom/Devirtualization"
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura zanika)
-                float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb, wireMask);
-                fixed4 wireMod = fixed4(wireframeColor.rgb, wireMask);
+                //float3 wireframeColor =  _WireColor.rgb + wireMask;
+                float3 wireframeColor =  lerp(_WireTint,_WireColor,wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
@@ -103,7 +102,8 @@ Shader "Custom/Devirtualization"
                 float alpha = lerp(texColor.a, gridTransparency, revealDifference);
                 
                 // Zapewnienie poprawnego renderowania przezroczystości z każdej strony
-                clip(alpha - 1); // Zapobiega wyświetlaniu pikseli z alpha = 0
+                //clip(alpha - 0.0993); // Zapobiega wyświetlaniu pikseli z alpha = 0
+                UNITY_APPLY_FOG(i.fogCoord, texColor);
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
             ENDCG
