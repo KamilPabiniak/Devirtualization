@@ -17,14 +17,15 @@ Shader "Devirtualization"
     SubShader
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent"  "IgnoreProjector"="True"}
-        LOD 100
+        LOD 200
 
         Pass
         {
-            //Cull Off
             ZWrite On
-            ZTest On
             Blend One OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
+            //Offset -1, -1
+            //ZTest LEqual
+            Cull Off
             
             CGPROGRAM
             #pragma vertex vert
@@ -43,6 +44,8 @@ Shader "Devirtualization"
                 float4 vertex : SV_POSITION;
                 float3 worldPos : TEXCOORD1;
                 float4 screenPos : TEXCOORD2;
+                float3 normal : TEXCOORD3;
+                float frontFace : TEXCOORD4;
             };
 
             sampler2D _MainTex;
@@ -58,13 +61,14 @@ Shader "Devirtualization"
             float _Feather;
             float _DissolveEmission;
 
-            v2f vert(appdata v)
+             v2f vert(appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 o.screenPos = ComputeScreenPos(o.vertex);
+                o.normal = normalize(mul((float3x3)unity_WorldToObject, v.vertex.xyz)); // Normalne dla kierunku
                 return o;
             }
 
@@ -90,7 +94,6 @@ Shader "Devirtualization"
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura zanika)
-                //float3 wireframeColor =  _WireColor.rgb + wireMask;
                 float3 wireframeColor =  lerp(_WireTint,_WireColor,wireMask);
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
@@ -103,12 +106,13 @@ Shader "Devirtualization"
                 float alpha = lerp(texColor.a, gridTransparency, revealDifference);
                 
                 // Zapewnienie poprawnego renderowania przezroczystości z każdej strony
-                //clip(alpha - 0.0993); // Zapobiega wyświetlaniu pikseli z alpha = 0
+                //clip(alpha - 0.000000001); // Zapobiega wyświetlaniu pikseli z alpha = 0
                 UNITY_APPLY_FOG(i.fogCoord, texColor);
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
             ENDCG
         }
+        
     }
 
     FallBack "Diffuse"

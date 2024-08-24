@@ -131,11 +131,11 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _Transition: 0.07
+    - _Transition: 0.23
     - _TransitionRadius: 0.01
     - _WireScale: 14
     - _WireSmoothness: 3
-    - _WireThickness: 0.04
+    - _WireThickness: 0.046
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
@@ -147,5 +147,5 @@ Material:
     - _StartPosition: {r: 0, g: 0, b: 0, a: 0}
     - _Wire: {r: 1, g: 0.5, b: 0, a: 1}
     - _WireColor: {r: 1, g: 1, b: 1, a: 1}
-    - _WireTint: {r: 0.29547882, g: 0.54276097, b: 0.754717, a: 1}
+    - _WireTint: {r: 0, g: 0.29462996, b: 0.5471698, a: 1}
   m_BuildTextureStacks: []
