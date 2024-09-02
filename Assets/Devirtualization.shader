@@ -6,7 +6,7 @@ Shader "Devirtualization"
         _MaskTex ("Mask for Dissolve", 2D) = "white" {}      // Maska obiektu
         _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) // Kolor siatki (domyślnie biały)
         _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Kolor rozpuszczania
-        _WireThickness ("Wireframe Thickness", Range(0, 0.3)) = 0.02  // Grubość linii siatki
+        _WireThickness ("Wireframe Thickness", Range(0, 5)) = 0.02  // Grubość linii siatki
         _WireScale ("Wireframe Scale", Float) = 6.0          // Skalowanie siatki (rozmiar kwadratów)
         _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
         _Feather ("Feather", Float) = 0.1                    // Rozmycie przejścia
@@ -17,15 +17,13 @@ Shader "Devirtualization"
     SubShader
     {
         Tags { "RenderType"="Transparent" "Queue"="Transparent"  "IgnoreProjector"="True"}
-        LOD 200
+        LOD 100
 
         Pass
         {
-            ZWrite On
-            Blend One OneMinusSrcAlpha // Zastosowanie blendowania dla przezroczystości
-            //Offset -1, -1
-            //ZTest LEqual
+            Blend One OneMinusSrcAlpha 
             Cull Off
+            //Offset -1, -1
             
             CGPROGRAM
             #pragma vertex vert
@@ -45,7 +43,6 @@ Shader "Devirtualization"
                 float3 worldPos : TEXCOORD1;
                 float4 screenPos : TEXCOORD2;
                 float3 normal : TEXCOORD3;
-                float frontFace : TEXCOORD4;
             };
 
             sampler2D _MainTex;
@@ -68,7 +65,7 @@ Shader "Devirtualization"
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 o.screenPos = ComputeScreenPos(o.vertex);
-                o.normal = normalize(mul((float3x3)unity_WorldToObject, v.vertex.xyz)); // Normalne dla kierunku
+                o.normal = normalize(mul((float3x3)unity_WorldToObject, v.vertex.xyz)); 
                 return o;
             }
 
@@ -94,26 +91,21 @@ Shader "Devirtualization"
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
                 // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura zanika)
-                float3 wireframeColor =  lerp(_WireTint,_WireColor,wireMask);
+                float3 wireframeColor =  lerp(_WireTint.rgb, _WireColor.rgb, wireMask); //_WireTint.rgb
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
-                float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
-                float3 dissolveColor = lerp(texColor.rgb / 2, _DissolveColor * _DissolveEmission, revealDifference);
+                float3 finalColor = lerp(texColor.rgb, wireframeColor + _WireColor, revealDifference);
+                float3 dissolveColor = lerp(0, _DissolveColor * _DissolveEmission , revealDifference);
                 
                 // Alpha set
-                float gridTransparency = _WireTint * wireMask;
-                //wireMask ma wade. Nie możesz ustawić go by był transparent. Oszukaj to
-                float alpha = lerp(texColor.a, gridTransparency, revealDifference);
+                float alpha = lerp(texColor.a, wireMask, revealDifference);
                 
                 // Zapewnienie poprawnego renderowania przezroczystości z każdej strony
-                //clip(alpha - 0.000000001); // Zapobiega wyświetlaniu pikseli z alpha = 0
-                UNITY_APPLY_FOG(i.fogCoord, texColor);
+                clip(alpha < 1.0f ? -1:1);
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
             ENDCG
         }
-        
     }
-
     FallBack "Diffuse"
 }

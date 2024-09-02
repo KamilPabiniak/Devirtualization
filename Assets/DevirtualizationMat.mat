@@ -117,10 +117,11 @@ Material:
     - _EnvironmentReflections: 1
     - _Feather: 0.008
     - _GlossMapScale: 0
-    - _Glossiness: 0
+    - _Glossiness: 0.687
     - _GlossyReflections: 0
+    - _HologramAlpha: 0.75
     - _MaxTriSize: 25
-    - _Metallic: 0
+    - _Metallic: 0.567
     - _OcclusionStrength: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
@@ -131,21 +132,29 @@ Material:
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
-    - _Transition: 0.23
+    - _Thickness: 0.0316
+    - _Transition: 0.389
     - _TransitionRadius: 0.01
     - _WireScale: 14
-    - _WireSmoothness: 3
-    - _WireThickness: 0.046
+    - _WireSmoothness: 0
+    - _WireThickness: 4.01
+    - _WireframeAliasing: 1.98
+    - _WireframeWidth: 0.06
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
+    - _BackColor: {r: 0, g: 0, b: 0, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DissolveColor: {r: 0.7830189, g: 0.32718223, b: 0.31394625, a: 1}
+    - _DissolveColor: {r: 0.8301887, g: 0, b: 0, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _FrontColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _StartPosition: {r: 0, g: 0, b: 0, a: 0}
     - _Wire: {r: 1, g: 0.5, b: 0, a: 1}
     - _WireColor: {r: 1, g: 1, b: 1, a: 1}
-    - _WireTint: {r: 0, g: 0.29462996, b: 0.5471698, a: 1}
+    - _WireTint: {r: 0, g: 0.109696984, b: 0.5471698, a: 1}
+    - _WireframeBackColour: {r: 0.8396226, g: 0, b: 0, a: 1}
+    - _WireframeColour: {r: 0, g: 0, b: 0, a: 1}
+    - _WireframeFrontColour: {r: 0.23970735, g: 0.8490566, b: 0.06808474, a: 1}
   m_BuildTextureStacks: []
