@@ -23,7 +23,6 @@ Shader "Devirtualization"
         {
             Blend One OneMinusSrcAlpha 
             Cull Off
-            //Offset -1, -1
             
             CGPROGRAM
             #pragma vertex vert
@@ -62,7 +61,7 @@ Shader "Devirtualization"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                o.uv = v.uv; //TRANSFORM_TEX(v.uv, _MainTex)
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 o.screenPos = ComputeScreenPos(o.vertex);
                 o.normal = normalize(mul((float3x3)unity_WorldToObject, v.vertex.xyz)); 
@@ -94,14 +93,15 @@ Shader "Devirtualization"
                 float3 wireframeColor =  lerp(_WireTint.rgb, _WireColor.rgb, wireMask); //_WireTint.rgb
 
                 // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
-                float3 finalColor = lerp(texColor.rgb, wireframeColor + _WireColor, revealDifference);
+                float3 finalColor = lerp(texColor.rgb, wireframeColor + _WireColor.a, revealDifference);
                 float3 dissolveColor = lerp(0, _DissolveColor * _DissolveEmission , revealDifference);
                 
                 // Alpha set
-                float alpha = lerp(texColor.a, wireMask, revealDifference);
+                //float wireframeAlpha = lerp(_WireTint.a, _WireColor.a, wireMask);
+                float alpha = lerp(texColor.a, wireframeColor, revealDifference);
                 
                 // Zapewnienie poprawnego renderowania przezroczystości z każdej strony
-                clip(alpha < 1.0f ? -1:1);
+                clip(1);
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
             ENDCG
