@@ -106,6 +106,9 @@ Shader "DevirtualizationWithGeometry"
 
                 wireMask = 1.0 - wireMask; // Odwrócenie wartości, aby linie były widoczne
 
+                // Dodanie wyostrzenia krawędzi siatki
+                wireMask = smoothstep(0.0, 0.01, wireMask); // "Cienki" smoothstep dla ostrych krawędzi
+
                 // Obliczanie ukrywania tekstury 
                 float featherModifier = _Transition == 1 ? 0 : _Feather;
                 float revealAmountTop = step(mask.r, _Transition + (1.0 / _Feather));
