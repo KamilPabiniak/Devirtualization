@@ -1115,7 +1115,7 @@ ParticleSystem:
     rateOverTime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 96.53
+      scalar: 100
       minScalar: 10
       maxCurve:
         serializedVersion: 2
@@ -5219,7 +5219,6 @@ GameObject:
   - component: {fileID: 695720193}
   - component: {fileID: 695720192}
   - component: {fileID: 695720196}
-  - component: {fileID: 695720197}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: Untagged
@@ -5328,20 +5327,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speed: {x: 10, y: 10, z: 10}
   space: 0
---- !u!114 &695720197
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 695720191}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ef2125242b983214c84b8186eb5cb55e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  particleSystem: {fileID: 402384547}
-  material: {fileID: 2100000, guid: 676500ad31b77384ca98cc7d2854a72d, type: 2}
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
