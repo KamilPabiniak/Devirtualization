@@ -1,16 +1,16 @@
-Shader "DevirtualizationWithGeometry"
+Shader "Devirtualization"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}                // Tekstura obiektu
-        _MaskTex ("Mask for Dissolve", 2D) = "white" {}      // Maska obiektu
-        _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) // Kolor siatki (domyślnie biały)
-        _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Kolor tła siatki
-        _WireThickness ("Wireframe Thickness", Range(0, 1)) = 0.02  // Grubość linii siatki
-        _Transition ("Transition", Range(0, 1)) = 0.0        // Zmienna kontrolująca przejście od tekstury do siatki
-        _Feather ("Feather", Float) = 0.1                    // Rozmycie przejścia
-        _DissolveColor ("Dissolve Color", Color) = (1.0, 0.5, 0.0, 1.0) // Kolor rozpuszczania
-        _DissolveEmission ("Dissolve Emission", Float) = 20  // Emisja rozpuszczania
+        _MainTex ("Texture", 2D) = "white" {}                
+        _MaskTex ("Mask for Dissolve", 2D) = "white" {}      
+        _Transition ("Transition", Range(0, 1)) = 0.0      
+        _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) //Grid color - lines
+        _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Grid color - background
+        _DissolveColor ("Dissolve Color", Color) = (1.0, 0.5, 0.0, 1.0) 
+        _DissolveEmission ("Dissolve Emission", Float) = 20  
+        _WireThickness ("Wireframe Thickness", Range(0, 1)) = 0.02  
+        _Feather ("Feather", Range(0, 0.01)) = 0.008                   
     }
 
     SubShader
@@ -31,10 +31,10 @@ Shader "DevirtualizationWithGeometry"
         }
         LOD 100
 
-        Pass // Rysowanie tylnej części siatki
+        Pass // Back of the object
         {
             Blend SrcAlpha OneMinusSrcAlpha 
-            Cull Front // Rysujemy tylko tylną część
+            Cull Front 
             ZTest LEqual
             ZWrite On
             
@@ -43,8 +43,6 @@ Shader "DevirtualizationWithGeometry"
             #pragma geometry geom
             #pragma fragment frag
             #include "UnityCG.cginc"
-
-            // Struktury i funkcje jak poprzednio...
 
             struct appdata
             {
@@ -64,7 +62,7 @@ Shader "DevirtualizationWithGeometry"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float3 bary : TEXCOORD1; // Współrzędne barycentryczne
+                float3 bary : TEXCOORD1; 
             };
 
             sampler2D _MainTex;
@@ -91,21 +89,19 @@ Shader "DevirtualizationWithGeometry"
             void geom(triangle v2f IN[3], inout TriangleStream<g2f> triStream)
             {
                 g2f o;
-
-                // Przypisanie pozycji i współrzędnych barycentrycznych
                 o.pos = IN[0].vertex;
                 o.uv = IN[0].uv;
-                o.bary = float3(1.0, 0.0, 0.0); // Wierzchołek 1
+                o.bary = float3(1.0, 0.0, 0.0); // vertex 1
                 triStream.Append(o);
 
                 o.pos = IN[1].vertex;
                 o.uv = IN[1].uv;
-                o.bary = float3(0.0, 1.0, 0.0); // Wierzchołek 2
+                o.bary = float3(0.0, 1.0, 0.0); //  2
                 triStream.Append(o);
 
                 o.pos = IN[2].vertex;
                 o.uv = IN[2].uv;
-                o.bary = float3(0.0, 0.0, 1.0); // Wierzchołek 3
+                o.bary = float3(0.0, 0.0, 1.0); // 3
                 triStream.Append(o);
             }
 
@@ -113,43 +109,36 @@ Shader "DevirtualizationWithGeometry"
             {
                 float4 texColor = tex2D(_MainTex, i.uv);
                 float4 mask = tex2D(_MaskTex, i.uv);
-
-                // Obliczenia dla siatki
+                
                 float wireMask = smoothstep(0.0, _WireThickness, i.bary.x) *
                                  smoothstep(0.0, _WireThickness, i.bary.y) *
                                  smoothstep(0.0, _WireThickness, i.bary.z);
 
-                wireMask = 1.0 - wireMask; // Odwrócenie wartości, aby linie były widoczne
-
-                // Dodanie wyostrzenia krawędzi siatki
-                wireMask = smoothstep(0.0, 0.01, wireMask); // "Cienki" smoothstep dla ostrych krawędzi
-
-                // Obliczanie ukrywania tekstury 
-                float featherModifier = _Transition == 1 ? 0 : _Feather;
+                wireMask = 1.0 - wireMask; 
+                
+                wireMask = smoothstep(0.0, 0.01, wireMask); // For better lines
+                
+                float feather_modifier_full = _Transition == 1 ? 0 : _Feather;
+                float feather_modifier_zero = _Transition == 0 ? 0 : _Feather;
                 float revealAmountTop = step(mask.r, _Transition + (1.0 / _Feather));
-                float revealAmountTopTex = step(mask.r, _Transition + _Feather);
-                float revealAmountBottom = step(mask.r, _Transition - featherModifier);
+                float revealAmountTopTex = step(mask.r, _Transition + feather_modifier_zero);
+                float revealAmountBottom = step(mask.r, _Transition - feather_modifier_full);
                 float revealDifference = revealAmountTop - revealAmountBottom;
-
-                // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura zanika)
+                
                 float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb, wireMask);
-
-                // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
                 float3 dissolveColor = lerp(0, _DissolveColor.rgb * _DissolveEmission , revealDifference);
                 
-                // Przezroczystość zależna od siatki
                 float alpha = lerp(texColor.a, wireMask, revealDifference);
-
-                // Dodanie minimalnej wartości alpha, aby uniknąć clipowania
-                alpha = max(alpha, 0.3); // Zapewnienie minimalnej widoczności
+                
+                alpha = max(alpha, 0.3); // Transparency
                 
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
             ENDCG
         }
 
-        Pass // Rysowanie przedniej części siatki
+        Pass // Front of the object
         {
             Tags
             {
@@ -161,12 +150,11 @@ Shader "DevirtualizationWithGeometry"
                 Comp Less
             }
             Blend SrcAlpha OneMinusSrcAlpha 
-            Cull Back // Rysujemy tylko przednią część
+            Cull Back 
             ZTest LEqual
             ZWrite On
 
-            // Kod w tym passie jest identyczny jak w poprzednim,
-            // z wyjątkiem Culling, który jest ustawiony na Back.
+            // The same as before/..
             CGPROGRAM
             #pragma vertex vert
             #pragma geometry geom
@@ -191,7 +179,7 @@ Shader "DevirtualizationWithGeometry"
             {
                 float4 pos : SV_POSITION;
                 float2 uv : TEXCOORD0;
-                float3 bary : TEXCOORD1; // Współrzędne barycentryczne
+                float3 bary : TEXCOORD1; 
             };
 
             sampler2D _MainTex;
@@ -219,21 +207,20 @@ Shader "DevirtualizationWithGeometry"
             void geom(triangle v2f IN[3], inout TriangleStream<g2f> triStream)
             {
                 g2f o;
-
-                // Przypisanie pozycji i współrzędnych barycentrycznych
+                
                 o.pos = IN[0].vertex;
                 o.uv = IN[0].uv;
-                o.bary = float3(1.0, 0.0, 0.0); // Wierzchołek 1
+                o.bary = float3(1.0, 0.0, 0.0); // 1
                 triStream.Append(o);
 
                 o.pos = IN[1].vertex;
                 o.uv = IN[1].uv;
-                o.bary = float3(0.0, 1.0, 0.0); // Wierzchołek 2
+                o.bary = float3(0.0, 1.0, 0.0); // 2
                 triStream.Append(o);
 
                 o.pos = IN[2].vertex;
                 o.uv = IN[2].uv;
-                o.bary = float3(0.0, 0.0, 1.0); // Wierzchołek 3
+                o.bary = float3(0.0, 0.0, 1.0); // 3
                 triStream.Append(o);
             }
 
@@ -242,35 +229,28 @@ Shader "DevirtualizationWithGeometry"
                 float4 texColor = tex2D(_MainTex, i.uv);
                 float4 mask = tex2D(_MaskTex, i.uv);
 
-                // Obliczenia dla siatki
                 float wireMask = smoothstep(0.0, _WireThickness, i.bary.x) *
                                  smoothstep(0.0, _WireThickness, i.bary.y) *
                                  smoothstep(0.0, _WireThickness, i.bary.z);
 
-                wireMask = 1.0 - wireMask; // Odwrócenie wartości, aby linie były widoczne
-
-                // Dodanie wyostrzenia krawędzi siatki
-                wireMask = smoothstep(0.0, 0.01, wireMask); // "Cienki" smoothstep dla ostrych krawędzi
-
-                // Obliczanie ukrywania tekstury 
+                wireMask = 1.0 - wireMask;
+                
+                wireMask = smoothstep(0.0, 0.01, wireMask);
+                
                 float featherModifier = _Transition == 1 ? 0 : _Feather;
+                float feather_modifier_zero = _Transition == 0 ? 0 : _Feather;
                 float revealAmountTop = step(mask.r, _Transition + (1.0 / _Feather));
-                float revealAmountTopTex = step(mask.r, _Transition + _Feather);
+                float revealAmountTopTex = step(mask.r, _Transition + feather_modifier_zero);
                 float revealAmountBottom = step(mask.r, _Transition - featherModifier);
                 float revealDifference = revealAmountTop - revealAmountBottom;
-
-                // Kolor siatki (widoczny tylko w miejscach, gdzie tekstura zanika)
+                
                 float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb, wireMask);
-
-                // Ustawienie przezroczystości - siatka powinna być widoczna, gdy tekstura zanika
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
                 float3 dissolveColor = lerp(0, _DissolveColor.rgb * _DissolveEmission , revealDifference);
                 
-                // Przezroczystość zależna od siatki
                 float alpha = lerp(texColor.a, wireMask, revealDifference);
-
-                // Dodanie minimalnej wartości alpha, aby uniknąć clipowania
-                alpha = max(alpha, 0.3); // Zapewnienie minimalnej widoczności
+                
+                alpha = max(alpha, 0.3);
                 
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
