@@ -5,12 +5,16 @@ Shader "Devirtualization"
         _MainTex ("Texture", 2D) = "white" {}                
         _MaskTex ("Mask for Dissolve", 2D) = "white" {}      
         _Transition ("Transition", Range(0, 1)) = 0.0      
-        _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) //Grid color - lines
-        _WireTint("Wire tint", Color) = (0.0, 0.7, 1.0, 1.0) // Grid color - background
+        _WireColor ("Wireframe Color", Color) = (1, 1, 1, 1) // Grid color - lines
+        _WireTint("Wire Tint", Color) = (0.0, 0.7, 1.0, 1.0) // Grid color - background
         _DissolveColor ("Dissolve Color", Color) = (1.0, 0.5, 0.0, 1.0) 
         _DissolveEmission ("Dissolve Emission", Float) = 20  
         _WireThickness ("Wireframe Thickness", Range(0, 1)) = 0.02  
-        _Feather ("Feather", Range(0, 0.01)) = 0.008                   
+        _Feather ("Feather", Range(0, 0.01)) = 0.008     
+        [Toggle]             
+        _ShowWireframe ("Show Wireframe", Float) = 1.0
+        
+        _ShowWireTint ("Show Wire Tint", Float) = 0.3
     }
 
     SubShader
@@ -25,7 +29,6 @@ Shader "Devirtualization"
         Stencil 
         {
             Ref 0
-            //Comp Equal
             Pass Invert
             Fail IncrSat
         }
@@ -74,6 +77,8 @@ Shader "Devirtualization"
             float _Transition;
             float _Feather;
             float _DissolveEmission;
+            float _ShowWireframe;
+            float _ShowWireTint;
 
             v2f vert(appdata v)
             {
@@ -117,6 +122,8 @@ Shader "Devirtualization"
                 wireMask = 1.0 - wireMask; 
                 
                 wireMask = smoothstep(0.0, 0.01, wireMask); // For better lines
+
+                wireMask *= _ShowWireframe; // Toggle wireframe visibility
                 
                 float feather_modifier_full = _Transition == 1 ? 0 : _Feather;
                 float feather_modifier_zero = _Transition == 0 ? 0 : _Feather;
@@ -124,14 +131,16 @@ Shader "Devirtualization"
                 float revealAmountTopTex = step(mask.r, _Transition + feather_modifier_zero);
                 float revealAmountBottom = step(mask.r, _Transition - feather_modifier_full);
                 float revealDifference = revealAmountTop - revealAmountBottom;
-                
+
                 float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb, wireMask);
+                wireframeColor *= _ShowWireTint; // Toggle wire tint visibility
+
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
                 float3 dissolveColor = lerp(0, _DissolveColor.rgb * _DissolveEmission , revealDifference);
                 
                 float alpha = lerp(texColor.a, wireMask, revealDifference);
                 
-                alpha = max(alpha, 0.3); // Transparency
+                alpha = max(alpha, _ShowWireTint); // Transparency
                 
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
@@ -154,14 +163,13 @@ Shader "Devirtualization"
             ZTest LEqual
             ZWrite On
 
-            // The same as before/..
             CGPROGRAM
             #pragma vertex vert
             #pragma geometry geom
             #pragma fragment frag
             #include "UnityCG.cginc"
 
-              struct appdata
+            struct appdata
             {
                 float4 vertex : POSITION;
                 float2 uv : TEXCOORD0;
@@ -191,7 +199,8 @@ Shader "Devirtualization"
             float _Transition;
             float _Feather;
             float _DissolveEmission;
-
+            float _ShowWireframe;
+            float _ShowWireTint;
 
             v2f vert(appdata v)
             {
@@ -236,6 +245,8 @@ Shader "Devirtualization"
                 wireMask = 1.0 - wireMask;
                 
                 wireMask = smoothstep(0.0, 0.01, wireMask);
+
+                wireMask *= _ShowWireframe; // Toggle wireframe visibility
                 
                 float featherModifier = _Transition == 1 ? 0 : _Feather;
                 float feather_modifier_zero = _Transition == 0 ? 0 : _Feather;
@@ -243,14 +254,16 @@ Shader "Devirtualization"
                 float revealAmountTopTex = step(mask.r, _Transition + feather_modifier_zero);
                 float revealAmountBottom = step(mask.r, _Transition - featherModifier);
                 float revealDifference = revealAmountTop - revealAmountBottom;
-                
+
                 float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb, wireMask);
+                wireframeColor *= _ShowWireTint; // Toggle wire tint visibility
+
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);
                 float3 dissolveColor = lerp(0, _DissolveColor.rgb * _DissolveEmission , revealDifference);
                 
                 float alpha = lerp(texColor.a, wireMask, revealDifference);
                 
-                alpha = max(alpha, 0.3);
+                alpha = max(alpha, _ShowWireTint);
                 
                 return float4(finalColor + dissolveColor * revealAmountTopTex, alpha);
             }
