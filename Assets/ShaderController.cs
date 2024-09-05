@@ -5,9 +5,12 @@ using UnityEngine;
 public class ShaderController : MonoBehaviour
 {
     public Material material;
+    public float repeatCooldown = 2.0f;
 
     private float _showWireframe;
     private float _showWireTint;
+
+    private Coroutine repeatingCoroutine;
 
     void Start()
     {
@@ -40,6 +43,21 @@ public class ShaderController : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.R))
         {
             RestoreSettings();
+        }
+        else if (Input.GetKeyDown(KeyCode.X))
+        {
+            if (repeatingCoroutine == null)
+            {
+                StopAllCoroutines();
+                repeatingCoroutine = StartCoroutine(RepeatingSpaceActionSequence(repeatCooldown));
+            }
+            else
+            {
+                // Zatrzymaj powtarzanie sekwencji
+                StopCoroutine(repeatingCoroutine);
+                repeatingCoroutine = null;
+                RestoreSettings(); // Przywróć ustawienia, gdy sekwencja zostaje zatrzymana
+            }
         }
     }
 
@@ -79,6 +97,16 @@ public class ShaderController : MonoBehaviour
         // Znów ustawienie na 0 i czarny
         material.SetFloat("_ShowWireframe", 0.0f);
         material.SetFloat("_ShowWireTint", 0.0f);
+    }
+
+    IEnumerator RepeatingSpaceActionSequence(float interval)
+    {
+        while (true)
+        {
+            yield return StartCoroutine(SpaceActionSequence());
+            yield return new WaitForSeconds(interval); // Czas pomiędzy kolejnymi wywołaniami
+            RestoreSettings();
+        }
     }
 
     void RestoreSettings()
