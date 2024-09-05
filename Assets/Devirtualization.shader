@@ -255,7 +255,7 @@ Shader "Devirtualization"
                 float revealAmountBottom = step(mask.r, _Transition - featherModifier);
                 float revealDifference = revealAmountTop - revealAmountBottom;
 
-                float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb, wireMask);
+                float3 wireframeColor = lerp(_WireTint.rgb, _WireColor.rgb * 4, wireMask);
                 wireframeColor *= _ShowWireTint; // Toggle wire tint visibility
 
                 float3 finalColor = lerp(texColor.rgb, wireframeColor, revealDifference);

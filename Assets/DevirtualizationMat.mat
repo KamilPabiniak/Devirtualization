@@ -25,8 +25,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _SHOWWIREFRAME_ON
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -128,7 +127,7 @@ Material:
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _ShowWireTint: 0.3
-    - _ShowWireframe: 1
+    - _ShowWireframe: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -136,11 +135,11 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _Thickness: 0.0316
-    - _Transition: 0.595
+    - _Transition: 1
     - _TransitionRadius: 0.01
     - _WireScale: 14
     - _WireSmoothness: 0
-    - _WireThickness: 0.03
+    - _WireThickness: 1
     - _WireframeAliasing: 1.98
     - _WireframeWidth: 0.06
     - _WorkflowMode: 1
@@ -156,7 +155,7 @@ Material:
     - _StartPosition: {r: 0, g: 0, b: 0, a: 0}
     - _Wire: {r: 1, g: 0.5, b: 0, a: 1}
     - _WireColor: {r: 1, g: 1, b: 1, a: 1}
-    - _WireTint: {r: 0.13443395, g: 0.33967963, b: 0.5377358, a: 1}
+    - _WireTint: {r: 0.14640442, g: 0.41958588, b: 0.6603774, a: 1}
     - _WireframeBackColour: {r: 0.8396226, g: 0, b: 0, a: 1}
     - _WireframeColour: {r: 0, g: 0, b: 0, a: 1}
     - _WireframeFrontColour: {r: 0.23970735, g: 0.8490566, b: 0.06808474, a: 1}

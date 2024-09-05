@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -5,14 +6,19 @@ public class ShaderController : MonoBehaviour
 {
     public Material material;
 
-    private float savedWireThickness;
-    private Color savedWireTint;
+    private float _showWireframe;
+    private float _showWireTint;
 
     void Start()
     {
         if (material == null)
         {
             Debug.LogError("Material is not assigned!");
+        }
+        else
+        {
+            _showWireframe = material.GetFloat("_ShowWireframe");
+            _showWireTint = material.GetFloat("_ShowWireTint");
         }
     }
 
@@ -57,32 +63,33 @@ public class ShaderController : MonoBehaviour
         // Zmiana _Transition z 1 do 0
         StartCoroutine(ChangeTransition(1.0f, 0.0f, 1.0f));
 
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(1.2f);
 
-        // Zapisanie i zmiana _WireThickness i _WireTint
-        savedWireThickness = material.GetFloat("_WireThickness");
-        savedWireTint = material.GetColor("_WireTint");
+        material.SetFloat("_ShowWireframe", 0.0f);
+        material.SetFloat("_ShowWireTint", 0.0f);
 
-        material.SetFloat("_WireThickness", 0.0f);
-        material.SetColor("_WireTint", Color.black);
-
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.05f);
 
         // Przywrócenie zapisu
-        material.SetFloat("_WireThickness", savedWireThickness);
-        material.SetColor("_WireTint", savedWireTint);
+        material.SetFloat("_ShowWireframe", _showWireframe);
+        material.SetFloat("_ShowWireTint", _showWireTint);
 
-        yield return new WaitForSeconds(1.0f);
+        yield return new WaitForSeconds(0.05f);
 
         // Znów ustawienie na 0 i czarny
-        material.SetFloat("_WireThickness", 0.0f);
-        material.SetColor("_WireTint", Color.black);
+        material.SetFloat("_ShowWireframe", 0.0f);
+        material.SetFloat("_ShowWireTint", 0.0f);
     }
 
     void RestoreSettings()
     {
         material.SetFloat("_Transition", 1.0f);
-        material.SetFloat("_WireThickness", savedWireThickness);
-        material.SetColor("_WireTint", savedWireTint);
+        material.SetFloat("_ShowWireframe", _showWireframe);
+        material.SetFloat("_ShowWireTint", _showWireTint);
+    }
+
+    private void OnDisable()
+    {
+        RestoreSettings();
     }
 }
