@@ -43,6 +43,13 @@ public class DissolveParticleController : MonoBehaviour
     {
         float currentDissolveValue = dissolveMaterial.GetFloat("_Transition");
 
+        // Sprawdzenie, czy rozpuszczenie osiągnęło maksimum (przyjmujemy 1.0 jako koniec)
+        if (currentDissolveValue >= 1.0f)
+        {
+            // Zatrzymaj emisję cząsteczek
+            return;
+        }
+
         // Emitowanie cząsteczek tylko wtedy, gdy jest zmiana rozpuszczania
         if (currentDissolveValue < lastDissolveValue)
         {
@@ -87,7 +94,7 @@ public class DissolveParticleController : MonoBehaviour
         Quaternion rotation = Quaternion.LookRotation(localNormal);
         emitParams.rotation3D = rotation.eulerAngles;
 
-        // Emituj więcej cząsteczek na raz, aby zredukować liczbę wywołań
+        // Emituj cząsteczkę
         particleSystem.Emit(emitParams, 1); 
     }
 }

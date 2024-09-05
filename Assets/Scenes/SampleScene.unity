@@ -286,7 +286,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 402384546}
   serializedVersion: 8
-  lengthInSec: 2
+  lengthInSec: 0.05
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -2111,7 +2111,7 @@ ParticleSystem:
     orbitalOffsetY:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 1.03
+      scalar: 5
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -2164,7 +2164,7 @@ ParticleSystem:
     orbitalOffsetZ:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: -1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -2217,7 +2217,7 @@ ParticleSystem:
     radial:
       serializedVersion: 2
       minMaxState: 0
-      scalar: -2
+      scalar: -3
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -2320,7 +2320,7 @@ ParticleSystem:
         m_PreInfinity: 2
         m_PostInfinity: 2
         m_RotationOrder: 4
-    inWorldSpace: 1
+    inWorldSpace: 0
   InheritVelocityModule:
     enabled: 0
     m_Mode: 0
@@ -5357,6 +5357,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: 676500ad31b77384ca98cc7d2854a72d, type: 2}
+  repeatCooldown: 2
 --- !u!1 &832575517
 GameObject:
   m_ObjectHideFlags: 0
