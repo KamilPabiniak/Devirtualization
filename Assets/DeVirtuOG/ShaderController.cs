@@ -97,6 +97,10 @@ public class ShaderController : MonoBehaviour
         // Znów ustawienie na 0 i czarny
         material.SetFloat("_ShowWireframe", 0.0f);
         material.SetFloat("_ShowWireTint", 0.0f);
+        
+        yield return new WaitForSeconds(2f);
+
+        RestoreSettings();
     }
 
     IEnumerator RepeatingSpaceActionSequence(float interval)
